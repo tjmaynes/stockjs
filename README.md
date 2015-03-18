@@ -1,4 +1,4 @@
-# StockifyJS
+# StockCandleJS
 an interactive candlestick chart using D3js and Yahoo Finance API.
 
 To run, enter in terminal:
