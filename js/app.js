@@ -32,17 +32,20 @@
     });
     
     var ChartView = Backbone.View.extend({
-	el: $('#candlestick'),
+	el: $('.wrapper'),
+	events: {
+	    "click .build":  "render"
+	},
 	initialize: function(){
 	    // create container element
-	    _.bindAll(this, "render", "frame");
-	    this.collection.bind("reset", this.frame);
-	    this.collection.bind("change", this.render);
-	    this.chart = d3.select(this.el);
+	    _.bindAll(this, "render");
+	    console.log("initialize!!!");
 	},
-
-	render: function() {
-	    this.chart = d3.select(this.el)
+	render: function(e) {
+	    var input =  this.$(".tickerValueId");
+	    //this.TickerModel.save({content: input.val()});
+	    
+	    this.chart = d3.select($("#candlestick"))
 		.append("svg:svg")
 		.attr("class", "candlestick")
 		.attr("width", width)
@@ -114,12 +117,7 @@
 		.attr("y1", function(d) { return y(d.High);})
 		.attr("y2", function(d) { return y(d.Low); })
 		.attr("stroke", function(d){ return d.Open > d.Close ? "red" : "green"; })
-	},
-
-	frame: function() {
-	    // on time draw -- axes, title, etc
-	    console.log("hello from frame!");
-	},
+	}
     });
     var candle = new ChartView();
 })(jQuery);
