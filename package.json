@@ -13,10 +13,10 @@
   },
   "keywords": [
     "yql",
-    "backbonejksbackbonejs",
+    "backbonejs",
     "js"
   ],
-  "author": "TJ MAyMaynes",
+  "author": "TJ Maynes",
   "license": "MIT",
   "dependencies": {
     "connect": "^3.3.5",
