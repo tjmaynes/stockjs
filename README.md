@@ -2,7 +2,8 @@
 an interactive candlestick chart using D3js, Backbonejs, and Yahoo Finance API.
 
 To run, enter in terminal:
-* python -m SimpleHTTPServer
+* npm install
+* node server.js
 
 Go to browser and enter:
 * localhost:8000
