@@ -1,19 +1,22 @@
 'use strict';
-(function($){
+$(function(){
     var CandleModel = Backbone.Model.extend({
-	defaults: {
-	    ticker: "Not specified"
-	},
-	query: 'AAPL',
-	url: 'http://query.yahooapis.com/v1/public/yql?q={0}&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=',
+	url: 'http://query.yahooapis.com/v1/public/yql',
 	format: 'json',
 	timeout: 10000,
 	dataType: 'jsonp',
+	defaults: function() {
+	    ticker: '';
+	    time: '';
+	},
+	initialize: function() {
+
+	},
 	fetch: function (options) {
             options = options ? _.clone(options) : {};
             options.data = options.data ? _.clone(options.data) : {};
             if (!options.data.q) {
-		options.data.q = _.result(this, 'query')
+		options.data.q = _.result(this, 'ticker')
             }
             if (!options.data.format) {
 		options.data.format = _.result(this, 'format');
@@ -27,19 +30,18 @@
 	},
 	parse: function(response) {
             return response.query.results.json.json;
+	},
+	clear: function(){
+	    this.destroy();
 	}
     });
-
+    
     var CandleCollection = Backbone.Collection.extend({
 	model: CandleModel,
+	localStorage: new Backbone.LocalStorage("stock-data")
     });
     
     var CandleView = Backbone.View.extend({
-	el: $('.wrapper'),
-	model: CandleModel,
-	events: {
-	    "click .buildBtn":  "getTickerValue"
-	},
 	constructor: function(options) {
 	    this.default_options = {
 		margin: {
@@ -51,29 +53,19 @@
 	    };
 	    this.options = $.extend(true, this.default_options, options);
 	    Backbone.View.apply(this, arguments);
-	    console.log("constructor");
 	},
 	initialize: function(options) {
 	    // create container element
-	    _.bindAll(this, "getTickerValue");
-	    console.log("initialize");
+	    //_.bindAll(this, "render");
+	    this.render();
 	},
-	getTickerValue: function() {
-	    var input =  this.$(".tickerValueId").val();
-	    if (input != '') {
-		//this.collection.save({content: input});
-		this.draw();
-	    } else {
-		$('input[type=text]').removeAttr('placeholder');
-		$('input[type=text]').attr('placeholder','Please enter a valid ticker symbol!');
-		return;
-	    }
-	},
-	draw: function() {
+	render: function() {
+	    console.log("render chart");
+	    return;
+	    /*
 	    var margin = this.options.margin;
 	    this.width = this.$el.width() - margin.left - margin.right;
 	    this.height = this.$el.height() - margin.top - margin.bottom;
-	    /*
 	    var data = [];
 	    var chart = d3.select("#candlestick")
 		.append("svg:svg")
@@ -147,9 +139,53 @@
 		.attr("y1", function(d) { return y(d.High);})
 		.attr("y2", function(d) { return y(d.Low); })
 		.attr("stroke", function(d){ return d.Open > d.Close ? "red" : "green"; })
-		*/
 	    return this;
+	    */
 	}
     });
-    var candle = new CandleView();
-})(jQuery);
+
+    var ListView = Backbone.View.extend({
+	initialize: function() {
+	    //this.listenTo(this.model, "change", this.render, this);
+	    //this.model.bind('change', this.render);
+	},
+	render: function() {
+	    this.$el.html(JSON.stringify(this.model.attributes));
+	}
+    });
+    
+    var AppView = Backbone.View.extend({
+	el: '.app',
+	events: {
+	    "click .resetBtn":  "reset",
+	    "click .buildBtn":  "build"
+	},
+	initialize: function() {
+	    var tickerValue =  "AAPL";   // initialize chart for AAPL stock
+	    var timeField = "Daily";
+	    this.model = new CandleModel({ticker: tickerValue, time: timeField});
+	    var candleView = new CandleView({ el: $("#candlestick") });
+	    var listView = new ListView({ el: $("#listView") });	    
+	},
+	build: function() {
+	    var tickerValue =  this.$(".tickerValueId").val();
+	    var timeField = this.$(".range").val();
+	    var stockData = new CandleModel({ticker: tickerValue, time: timeField});
+	    if (tickerValue != '' && timeField != '') {
+		var candleView = new CandleView({ el: $("#candleView"), model: stockData });
+		var listView = new ListView({ el: $("#listView"), model: stockData });
+	    } else {
+		$(".tickerValueId").removeAttr('placeholder');
+		$(".tickerValueId").attr('placeholder','Please enter a valid ticker symbol!');
+	    }
+	},
+	reset: function() {
+	    $("#myForm")[0].reset(); 	    // reset the form
+	    d3.select("svg").remove();	    // reset candlestick chart
+	    this.model.destroy();	    // remove localstorage values (when setup)
+	    return;
+	}
+    });
+    
+    var app = new AppView;
+});
