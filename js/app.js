@@ -147,10 +147,13 @@ $(function(){
   var ListView = Backbone.View.extend({
     initialize: function() {
       //this.listenTo(this.model, "change", this.render, this);
-      this.model.bind('change', this.render);
+      //this.model.bind('change', this.render);
+      this.render();
     },
     render: function() {
+      this.model.fetch();
       this.$el.html(JSON.stringify(this.model.attributes));
+      console.log(this.model.attributes);
     }
   });
 

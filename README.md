@@ -1,4 +1,4 @@
-# StockCandleJS
+# StockCandleJS (wip)
 an interactive candlestick chart using D3js, Backbonejs, and Yahoo Query Language.
 
 To run, enter in terminal:
