@@ -1,13 +1,20 @@
 'use strict';
 $(function(){
   var CandleModel = Backbone.Model.extend({
-    url: 'http://query.yahooapis.com/v1/public/yql',
+    url: "http://query.yahooapis.com/v1/public/yql" +
+      "?q=select%20*%20from%20yahoo.finance.historicaldata%20" +
+      "where%20symbol%20%3D%20%22" +
+      ticker + "%22%20and%20startDate%20%3D%20%22" + 
+      start + "%22%20and%20endDate%20%3D%20%22" +
+      end + "%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
     format: 'json',
     timeout: 10000,
     dataType: 'jsonp',
     defaults: function() {
       ticker: '';
-      time: '';
+      resolution: '';
+      start: '';
+      end: '';
     },
     initialize: function() {
 
@@ -146,7 +153,6 @@ $(function(){
 
   var ListView = Backbone.View.extend({
     initialize: function() {
-      //this.listenTo(this.model, "change", this.render, this);
       //this.model.bind('change', this.render);
       this.render();
     },
@@ -164,16 +170,20 @@ $(function(){
       "click .buildBtn":  "build"
     },
     initialize: function() {
-      var tickerValue =  "AAPL";   // initialize chart for AAPL stock
-      var timeField = "Daily";
-      this.model = new CandleModel({ticker: tickerValue, time: timeField});
+      var startField = $( "#startDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("1990-01-01").val();
+      var endField = $( "#endDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("setDate", new Date()).val();
+      var tickerField =  "AAPL";
+      var resolutionField = "Daily";
+      this.model = new CandleModel({ticker: tickerField, resolution: resolutionField, start: startField, end: endField });
       var candleView = new CandleView({ el: $("#candlestick"), model: this.model });
       var listView = new ListView({ el: $("#listView"), model: this.model });
     },
     build: function() {
-      var tickerValue =  this.$(".tickerValueId").val();
+      var startField = $( "#startDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker().val();
+      var endField $( "#endDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("setDate", new Date()).val();
+      var tickerField =  this.$(".tickerValueId").val();
       var timeField = this.$(".range").val();
-      this.model = new CandleModel({ticker: tickerValue, time: timeField});
+      this.model = new CandleModel({ticker: tickerField, resolution: resolutionField, start: startField, end: endField });
       if (tickerValue != '' && timeField != '') {
         var candleView = new CandleView({ el: $("#candleView"), model: this.model });
         var listView = new ListView({ el: $("#listView"), model: this.model });
@@ -183,9 +193,9 @@ $(function(){
       }
     },
     reset: function() {
-      $("#myForm")[0].reset(); 	    // reset the form
+      $("#myForm")[0].reset(); 	      // reset the form
       d3.select("svg").remove();	    // reset candlestick chart
-      this.model.destroy();	    // remove localstorage values (when setup)
+      this.model.destroy();	          // remove localstorage values (when setup)
       return;
     }
   });
