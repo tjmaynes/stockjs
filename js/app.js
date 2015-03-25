@@ -42,8 +42,10 @@ $(function(){
 
   var CandleCollection = Backbone.Collection.extend({
     model: CandleModel,
-    localStorage: new Backbone.LocalStorage("stock-data")
+    localStorage: new Store("stock-data") //Backbone.LocalStorage
   });
+
+  var candleCollection = new CandleCollection();
 
   var CandleView = Backbone.View.extend({
     constructor: function(options) {
@@ -150,13 +152,13 @@ $(function(){
 
   var ListView = Backbone.View.extend({
     initialize: function() {
-      //this.model.bind('change', this.render);
+      //this.model.bind('click', this.render); // test this later --> may effect new on line 184
       this.render();
     },
     render: function() {
-      this.model.fetch();
-      this.$el.html(JSON.stringify(this.model.attributes));
-      console.log(this.model.attributes);
+      //this.model.fetch();
+      this.$el.html(JSON.stringify(candleCollection));
+      console.log(candleCollection);
     }
   });
 
@@ -167,33 +169,53 @@ $(function(){
       "click .buildBtn":  "build"
     },
     initialize: function() {
-      var startField = $( "#startDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("1990-01-01").val();
-      var endField = $( "#endDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("setDate", new Date()).val();
+      $( "#startDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("1990-01-01");
+      $( "#endDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("setDate", new Date());
+      var startField = $( "#startDatePicker" ).val();
+      var endField $( "#endDatePicker" ).val();
       var tickerField =  "AAPL";
       var resolutionField = "Daily";
-      this.model = new CandleModel({ticker: tickerField, resolution: resolutionField, start: startField, end: endField });
-      var candleView = new CandleView({ el: $("#candlestick"), model: this.model });
-      var listView = new ListView({ el: $("#listView"), model: this.model });
+      candleCollection.create(this.initialAttributes);
+      var candleView = new CandleView({ el: $("#candlestick") });
+      var listView = new ListView({ el: $("#listView") }); //, model: this.model 
     },
     build: function() {
-      var startField = $( "#startDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker().val();
-      var endField $( "#endDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("setDate", new Date()).val();
-      var tickerField =  this.$(".tickerValueId").val();
-      var timeField = this.$(".range").val();
-      this.model = new CandleModel({ticker: tickerField, resolution: resolutionField, start: startField, end: endField });
+      $( "#startDatePicker" ).datepicker({dateFormat:"yy-mm-dd"}); //may need to fix this
+      $( "#endDatePicker" ).datepicker({dateFormat:"yy-mm-dd"});
+      var startField = $( "#startDatePicker" ).val();
+      var endField $( "#endDatePicker" ).val();
+      var tickerField =  this.$(".tickerField").val();
+      var resolutionField = this.$(".resolutionField").val();
       if (tickerValue != '' && timeField != '') {
-        var candleView = new CandleView({ el: $("#candleView"), model: this.model });
-        var listView = new ListView({ el: $("#listView"), model: this.model });
+        candleCollection.add(this.newAttributes);
+        var candleView = new CandleView({ el: $("#candleView") });
+        var listView = new ListView({ el: $("#listView") });
       } else {
-        $(".tickerValueId").removeAttr('placeholder');
-        $(".tickerValueId").attr('placeholder','Please enter a valid ticker symbol!');
+        $(".tickerField").removeAttr('placeholder');
+        $(".tickerField").attr('placeholder','Please enter a valid ticker symbol!');
       }
     },
     reset: function() {
       $("#myForm")[0].reset(); 	      // reset the form
       d3.select("svg").remove();	    // reset candlestick chart
-      this.model.destroy();	          // remove localstorage values (when setup)
+      candleCollection.destroy();     //this.model.destroy();	/ remove localstorage values (when setup)
       return;
+    }
+    initialAttributes: function() {
+      return {
+        ticker: tickerField,
+        resolution: resolutionField,
+        start: startField,
+        end: endField
+      }
+    }
+    newAttributes: function() {
+     return {
+          ticker: tickerField,
+          resolution: resolutionField,
+          start: startField,
+          end: endField  
+      }
     }
   });
   var app = new AppView;
