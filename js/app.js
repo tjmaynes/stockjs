@@ -1,12 +1,12 @@
 'use strict';
 $(function(){
   var CandleModel = Backbone.Model.extend({
-    url: "http://query.yahooapis.com/v1/public/yql" +
-      "?q=select%20*%20from%20yahoo.finance.historicaldata%20" +
-      "where%20symbol%20%3D%20%22" +
-      ticker + "%22%20and%20startDate%20%3D%20%22" + 
-      start + "%22%20and%20endDate%20%3D%20%22" +
-      end + "%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
+    url: "http://query.yahooapis.com/v1/public/yql"
+      + "?q=select%20*%20from%20yahoo.finance.historicaldata%20"
+      + "where%20symbol%20%3D%20%22"
+      + ticker + "%22%20and%20startDate%20%3D%20%22"
+      + start + "%22%20and%20endDate%20%3D%20%22"
+      + end + "%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
     format: 'json',
     timeout: 10000,
     dataType: 'jsonp',
@@ -15,9 +15,6 @@ $(function(){
       resolution: '';
       start: '';
       end: '';
-    },
-    initialize: function() {
-
     },
     fetch: function (options) {
       options = options ? _.clone(options) : {};
