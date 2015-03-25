@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <html>
   <head>
-    <title>StockCandleJS</title>
+    <title>scjs- TJ Maynes</title>
     <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
@@ -13,46 +13,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
     <style>
       body {
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
       }
       text {
-        font: 10px sans-serif;
+      font: 10px sans-serif;
       }
       .axis path,
       .axis line {
-        fill: none;
-        stroke: #000;
-        shape-rendering: crispEdges;
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
       }
       form {
-        margin-top: 20px;
+      margin-top: 20px;
       }
       .app{
-        max-width: 800px;
+      max-width: 800px;
       }
-      .tickerField{
-        width:200px;
+      #tickerField{
+      width:200px;
       }
     </style>
-    <!--[if IE]>
-    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="app">
-      <header>D3js + Backbonejs + Yahoo Query Language</header>
+    <script type="text/template" id="chart_template">
       <form id="myForm">
-        <input type="text" placeholder="Insert Ticker Symbol" name="ticker" class="tickerField" autofocus>
+        <input type="text" placeholder="Insert Ticker Symbol" name="ticker" id="tickerField" autofocus>
+	<select id="resolutionField">
+	  <option>Daily</option>
+	  <option>Weekly</option>
+	  <option>Monthly</option>
+	</select>
         <div id="startDatePicker"></div>
         <div id="endDatePicker"></div>
         <input type="button" value="Build" class="buildBtn"/>
         <input type="button" value="Reset" class="resetBtn"/>
       </form>
+      <label><%= ticker_label %></label>
       <div id="candleView"></div>
       <div id="listView"></div>
+    </script>
+    <!--[if IE]>
+        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+  </head>
+  <body>
+    <div class="app">
+      <header>D3js + Backbonejs + Yahoo Query Language</header>
+      <div id="chart_container"></div>
     </div>
     <a href="https://github.com/TJMaynes/scjs"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+    <!-- Load Scripts -->
     <script type="text/javascript" src="/js/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="/js/underscore.min.js"></script>
     <script type="text/javascript" src="/js/backbone.min.js"></script>
     <script type="text/javascript" src="/js/backbone.localStorage.min.js"></script>
