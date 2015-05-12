@@ -2,15 +2,16 @@
 <meta charset="utf-8">
 <html>
   <head>
-    <title>scjs- TJ Maynes</title>
+    <title>stockjs - TJ Maynes</title>
     <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="author" content="TJ Maynes">
     <meta name="description" content="an interactive candlestick chart using D3js and Yahoo Finance API.">
-    <meta name="application-name" content="StockCandleJS"/>
+    <meta name="application-name" content="stockjs"/>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css">
     <style>
       body {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -34,20 +35,17 @@
       width:200px;
       }
     </style>
-    <script type="text/template" id="chart_template">
-      <form id="myForm">
-        <input type="text" placeholder="Insert Ticker Symbol" name="ticker" id="tickerField" autofocus>
-	<select id="resolutionField">
-	  <option>Daily</option>
-	  <option>Weekly</option>
-	  <option>Monthly</option>
-	</select>
-        <div id="startDatePicker"></div>
-        <div id="endDatePicker"></div>
-        <input type="button" value="Build" class="buildBtn"/>
-        <input type="button" value="Reset" class="resetBtn"/>
-      </form>
-      <label><%= ticker_label %></label>
+    <script type="text/template" id="chartTemplate">
+      	<form id="myForm">
+          <input type="text" placeholder="Insert Ticker Symbol" name="ticker" id="tickerField" autofocus>
+	  <input type="text" id="startDatePicker" placeholder="Start Date">
+	  <input type="text" id="endDatePicker" placeholder="End Date">
+	  <input type="radio" value="d" name="periodBtn" checked>Daily
+	  <input type="radio" value="w" name="periodBtn">Weekly
+	  <input type="radio" value="m" name="periodBtn">Monthly
+          <input type="button" value="Build" class="buildBtn"/>
+          <input type="button" value="Reset" class="resetBtn"/>
+	</form>
       <div id="candleView"></div>
       <div id="listView"></div>
     </script>
@@ -57,17 +55,26 @@
   </head>
   <body>
     <div class="app">
-      <header>D3js + Backbonejs + Yahoo Query Language</header>
-      <div id="chart_container"></div>
+      <header>
+	<h1>D3js + Backbonejs + Yahoo Query Language</h1>
+	<h3>Author: TJ Maynes </h3>
+	<div id="chartContainer"></div>
+      </header>
+      <section>
+
+      </section>
+      <footer>
+	<p>© <a href="mailto:tjmaynes@outlook.com">TJ Maynes</a> | 2015</p>
+      </footer>
     </div>
     <a href="https://github.com/TJMaynes/scjs"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
     <!-- Load Scripts -->
-    <script type="text/javascript" src="/js/jquery-1.11.2.min.js"></script>
-    <script type="text/javascript" src="/js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="/js/underscore.min.js"></script>
-    <script type="text/javascript" src="/js/backbone.min.js"></script>
-    <script type="text/javascript" src="/js/backbone.localStorage.min.js"></script>
-    <script type="text/javascript" src="/js/d3.min.js"></script>
-    <script type="text/javascript" src="/js/app.js"></script>
+    <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/underscore.min.js"></script>
+    <script type="text/javascript" src="js/backbone.min.js"></script>
+    <script type="text/javascript" src="js/backbone.localStorage.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
   </body>
 </html>
