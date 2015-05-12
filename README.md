@@ -9,4 +9,4 @@ Go to browser and enter:
 * localhost:8080
 
 ## Screenshot
-![screenshot](/screenshots/alpha.png)
+![screenshot](/screenshots/beta.png)
