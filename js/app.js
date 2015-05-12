@@ -1,29 +1,12 @@
 'use strict';
 
 $(function(){
-    // helper function
-    function csvJSON(csv){
-	var lines=csv.split("\n");
-	var result = [];
-	var headers=lines[0].split(",");
-	for(var i=1;i<lines.length;i++){
-	    var obj = {};
-	    var currentline=lines[i].split(",");
-	    for(var j=0;j<headers.length;j++){
-		obj[headers[j]] = currentline[j];
-	    }
-	    result.push(obj);
-	}
-	return JSON.stringify(result); //JSON
-    }
-
-
     var CandleModel = Backbone.Model.extend({
 	url: "http://query.yahooapis.com/v1/public/yql",
 	defaults: {
 	    symbol: "AAPL",
-	    startDate: "2012-01-01",
-	    endDate: "2012-12-31",
+	    startDate: "1990-01-01",
+	    endDate: "2015-01-01",
 	    period: "d"
 	},
 	initialize: function(){
@@ -180,25 +163,13 @@ $(function(){
 	    var template = _.template( $("#chartTemplate").html());
 	    this.$el.html( template );
 
-	    // Get symbols
-	    var exchange = "nyse";
-	    var url = "http://www.nasdaq.com/screening/companies-by-industry.aspx?exchange="
-		+ exchange + "&render=download";
-	    $.ajax({
-		type: "GET",
-		dataType: "text",
-		url: url,
-		success: function(data) {
-		    alert(data);
-		}
-	    });
-
 	    // set up datepicker (for ui coolness)
 	    $("#startDatePicker").datepicker({
 		autoclose: true,
 		changeMonth: true,
 		changeYear: true,
 		dateFormat: "yy-mm-dd",
+		maxDate: new Date(),
 		onClose: function( selectedDate ) {
 		    $( "#endDatePicker" ).datepicker( "option", "minDate", selectedDate );
 		    $( "#endDatePicker" ).datepicker( "option", "maxDate", new Date());
@@ -208,27 +179,26 @@ $(function(){
 		autoclose: true,
 		changeMonth: true,
 		changeYear: true,
-		dateFormat: "yy-mm-dd"
+		maxDate: new Date(),
+		dateFormat: "yy-mm-dd",
+		onClose: function( selectedDate ) {
+		    $( "#startDatePicker" ).datepicker( "option", "maxDate", selectedDate );
+		}
 	    });
 
-	    // get data from fields
-	    var symbolField =  "AAPL";
-	    var periodField = $('input[name="periodBtn"]:checked').val();
-
-	    // create model and add to collection
-	    var defaultModel = new CandleModel({ symbol: symbolField, period: periodField });
-	    candleCollection.create(defaultModel);
+	    // create model and collection
+	    candleCollection.create(new CandleModel());
 
 	    // create new view objects
 	    var candleView = new CandleView({ el: $("#candleView") });
 	    var listView = new ListView({ el: $("#listView") });
 	},
 	build: function() {
-	    var startField = $( "#startDatePicker" ).val();
-	    var endField = $( "#endDatePicker" ).val();
-	    var symbolField =  this.$('input[name="symbolOption"]:checked').val();
-	    var periodField = $('input[name="periodOption"]:checked').val();
-	    var exchangeField = $('input[name="exchangeOption"]:checked').val();
+	    var startField = this.$( "#startDatePicker" ).val();
+	    var endField = this.$( "#endDatePicker" ).val();
+	    var symbolField =  this.$('#symbolField').val();
+	    var periodField = $('option[name="periodOption"]:checked').val();
+	    var exchangeField = this.$('input[name="exchangeOption"]:checked').val();
 	    if (symbolField != '' && periodField != '' && startField != '' && endField != '') {
 		var buildNewModel = new CandleModel({ symbol: symbolField, startDate: startField, endDate: endField, period: periodField });
 		candleCollection.create(buildNewModel);
