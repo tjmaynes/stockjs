@@ -12,40 +12,30 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
     <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css">
-    <style>
-      body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      }
-      text {
-      font: 10px sans-serif;
-      }
-      .axis path,
-      .axis line {
-      fill: none;
-      stroke: #000;
-      shape-rendering: crispEdges;
-      }
-      form {
-      margin-top: 20px;
-      }
-      .app{
-      max-width: 800px;
-      }
-      #tickerField{
-      width:200px;
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
     <script type="text/template" id="chartTemplate">
-      	<form id="myForm">
-          <input type="text" placeholder="Insert Ticker Symbol" name="ticker" id="tickerField" autofocus>
-	  <input type="text" id="startDatePicker" placeholder="Start Date">
-	  <input type="text" id="endDatePicker" placeholder="End Date">
-	  <input type="radio" value="d" name="periodBtn" checked>Daily
-	  <input type="radio" value="w" name="periodBtn">Weekly
-	  <input type="radio" value="m" name="periodBtn">Monthly
-          <input type="button" value="Build" class="buildBtn"/>
-          <input type="button" value="Reset" class="resetBtn"/>
-	</form>
+      <form id="myForm">
+	<select>
+	  <option value="" disabled selected>Select exchange</option>
+	  <option value="all" name="exchangeOption">ALL</option>
+	  <option value="nasdaq" name="exchangeOption">NASDAQ</option>
+	  <option value="nyse" name="exchangeOption">NYSE</option>
+	</select>
+	<select>
+	  <option value="" disabled selected>Select ticker symbol</option>
+	  <option value="d" name="symbolOption">Daily</option>
+	</select>
+	<input type="text" id="startDatePicker" placeholder="Select start date">
+	<input type="text" id="endDatePicker" placeholder="Select end date">
+	<select>
+	  <option value="" disabled selected>Select period</option>
+	  <option value="d" name="periodOption">Daily</option>
+	  <option value="w" name="periodOption">Weekly</option>
+	  <option value="m" name="periodOption">Monthly</option>
+	</select>
+        <input type="button" value="Build" class="buildBtn"/>
+        <input type="button" value="Reset" class="resetBtn"/>
+      </form>
       <div id="candleView"></div>
       <div id="listView"></div>
     </script>
@@ -57,18 +47,23 @@
     <div class="app">
       <header>
 	<h1>D3js + Backbonejs + Yahoo Query Language</h1>
-	<h3>Author: TJ Maynes </h3>
-	<div id="chartContainer"></div>
+	<h3>Author: <a href="www.tjmaynes.com/">TJ Maynes</a></h3>
+	<nav>
+	  <ul>
+	    <li><a href="http://www.twitter.com/tjmaynes" target="_blank">twitter</a></li>
+	    <li> / </li>
+	    <li><a href="mailto:tjmaynes@outlook.com" target="_blank">contact</a></li>
+	  </ul>
+	</nav>
       </header>
       <section>
-
+	<div id="chartContainer"></div>
       </section>
       <footer>
 	<p>© <a href="mailto:tjmaynes@outlook.com">TJ Maynes</a> | 2015</p>
       </footer>
     </div>
     <a href="https://github.com/TJMaynes/scjs"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
-    <!-- Load Scripts -->
     <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
     <script type="text/javascript" src="js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="js/underscore.min.js"></script>

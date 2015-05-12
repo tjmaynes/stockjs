@@ -3,7 +3,7 @@ an interactive candlestick chart using D3js, Backbonejs, and Yahoo Query Languag
 
 To run, enter in terminal:
 * npm install
-* node server.js
+* npm start
 
 Go to browser and enter:
 * localhost:8080

@@ -1,6 +1,23 @@
 'use strict';
 
 $(function(){
+    // helper function
+    function csvJSON(csv){
+	var lines=csv.split("\n");
+	var result = [];
+	var headers=lines[0].split(",");
+	for(var i=1;i<lines.length;i++){
+	    var obj = {};
+	    var currentline=lines[i].split(",");
+	    for(var j=0;j<headers.length;j++){
+		obj[headers[j]] = currentline[j];
+	    }
+	    result.push(obj);
+	}
+	return JSON.stringify(result); //JSON
+    }
+
+
     var CandleModel = Backbone.Model.extend({
 	url: "http://query.yahooapis.com/v1/public/yql",
 	defaults: {
@@ -10,10 +27,13 @@ $(function(){
 	    period: "d"
 	},
 	initialize: function(){
-	    var data = encodeURIComponent("select * from yahoo.finance.historicaldata where symbol in ('" + this.get("symbol") + "') and startDate = \"" + this.get("startDate") + "\" and endDate = \"" + this.get("endDate") + "\"");
+	    var data = encodeURIComponent("select * from yahoo.finance.historicaldata where symbol in ('"
+					  + this.get("symbol") + "') and startDate = \""
+					  + this.get("startDate") + "\" and endDate = \""
+					  + this.get("endDate") + "\"");
 	    $.getJSON(this.url, "q=" + data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env")
 		.done(function (data) {
-		    console.log("url: " + this.url + "q=" + this.data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env");
+		    //console.log("url: " + this.url + "q=" + this.data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env");
 		    //$('#result').text("Price: " + data.query.results.quote[0][0]);
 		    return data;
 		})
@@ -29,7 +49,7 @@ $(function(){
 
     var CandleCollection = Backbone.Collection.extend({
 	model: CandleModel,
-	localStorage: new Store("stock-data") //Backbone.LocalStorage
+	localStorage: new Store("stock_data")
     });
 
     var candleCollection = new CandleCollection();
@@ -160,22 +180,34 @@ $(function(){
 	    var template = _.template( $("#chartTemplate").html());
 	    this.$el.html( template );
 
-	    // set up datepicker (for ui coolness)
-	    $("#endDatePicker").datepicker({
-		dateFormat: "yy-mm-dd",
-		minDate: 0,
-		onSelect: function (date) {
-		    var startDate = $('#startDatePicker');
-		    var endDate = $(this).datepicker('getDate');
-		    var minDate = $(this).datepicker('getDate');
-		    startDate.datepicker('setDate', minDate);
-		    endDate.setDate(endDate.getDate());
-		    startDate.datepicker('option', 'maxDate', endDate);
-		    startDate.datepicker('option', 'minDate', minDate);
-		    $(this).datepicker('option', 'minDate', minDate);
+	    // Get symbols
+	    var exchange = "nyse";
+	    var url = "http://www.nasdaq.com/screening/companies-by-industry.aspx?exchange="
+		+ exchange + "&render=download";
+	    $.ajax({
+		type: "GET",
+		dataType: "text",
+		url: url,
+		success: function(data) {
+		    alert(data);
 		}
 	    });
-	    $('#startDatePicker').datepicker({
+
+	    // set up datepicker (for ui coolness)
+	    $("#startDatePicker").datepicker({
+		autoclose: true,
+		changeMonth: true,
+		changeYear: true,
+		dateFormat: "yy-mm-dd",
+		onClose: function( selectedDate ) {
+		    $( "#endDatePicker" ).datepicker( "option", "minDate", selectedDate );
+		    $( "#endDatePicker" ).datepicker( "option", "maxDate", new Date());
+		}
+	    });
+	    $('#endDatePicker').datepicker({
+		autoclose: true,
+		changeMonth: true,
+		changeYear: true,
 		dateFormat: "yy-mm-dd"
 	    });
 
@@ -194,34 +226,27 @@ $(function(){
 	build: function() {
 	    var startField = $( "#startDatePicker" ).val();
 	    var endField = $( "#endDatePicker" ).val();
-	    var symbolField =  this.$("#tickerField").val();
-	    var periodField = $('input[name="periodBtn"]:checked').val();
+	    var symbolField =  this.$('input[name="symbolOption"]:checked').val();
+	    var periodField = $('input[name="periodOption"]:checked').val();
+	    var exchangeField = $('input[name="exchangeOption"]:checked').val();
 	    if (symbolField != '' && periodField != '' && startField != '' && endField != '') {
-		// create model and add to collection
 		var buildNewModel = new CandleModel({ symbol: symbolField, startDate: startField, endDate: endField, period: periodField });
 		candleCollection.create(buildNewModel);
 		var candleView = new CandleView({ el: $("#candleView") });
 		var listView = new ListView({ el: $("#listView") });
-	    } else {
+	    }
+	    else if (symbolField == '') {
 		$(".symbolField").removeAttr('placeholder');
 		$(".symbolField").attr('placeholder','Please enter a valid ticker symbol!');
+	    } else {
+
 	    }
 	},
 	reset: function() {
-	    $("#myForm")[0].reset(); 	    // reset the form
-	    d3.select("svg").remove();      // reset candlestick chart
-	    candleCollection.each(function(model) {
-		this.model.destroy();
-	    });
+	    $("#myForm")[0].reset();
+	    d3.select("svg").remove();
+	    localStorage.clear();
 	    return;
-	},
-	modelAttributes: function() {
-	    return {
-		symbol: symbolField,
-		startDate: startField,
-		endDate: endField,
-		period: periodField
-	    }
 	}
     });
     var app = new ChartView({ el: $("#chartContainer") });
