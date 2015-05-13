@@ -18,17 +18,10 @@
         <input type="text" placeholder="Insert Ticker Symbol" name="ticker" id="symbolField" autofocus>
 	<input type="text" id="startDatePicker" placeholder="Select start date">
 	<input type="text" id="endDatePicker" placeholder="Select end date">
-	<select>
-	  <option value="" disabled selected>Select period</option>
-	  <option value="d" name="periodOption">Daily</option>
-	  <option value="w" name="periodOption">Weekly</option>
-	  <option value="m" name="periodOption">Monthly</option>
-	</select>
         <input type="button" value="Build" class="buildBtn"/>
         <input type="button" value="Reset" class="resetBtn"/>
       </form>
       <div id="candleView"></div>
-      <div id="listView"></div>
     </script>
     <!--[if IE]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -37,8 +30,8 @@
   <body>
     <div class="app">
       <header>
-	<h1>D3js + Backbonejs + Yahoo Query Language</h1>
-	<h3>Author: <a href="www.tjmaynes.com/">TJ Maynes</a></h3>
+	<h1>Backbonejs + D3js + Yahoo Query Language</h1>
+	<h3>Author: <a href="http://www.tjmaynes.com/">TJ Maynes</a></h3>
 	<nav>
 	  <ul>
 	    <li><a href="http://www.twitter.com/tjmaynes" target="_blank">twitter</a></li>

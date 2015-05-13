@@ -45,6 +45,9 @@ h1, h2, h3, h4, h5, h6 {
 ol, ul{
     margin:0 0 10px;
 }
+nav ul li {
+    display: inline;
+}
 text {
     font: 10px sans-serif;
 }
@@ -55,13 +58,10 @@ text {
     shape-rendering: crispEdges;
 }
 .app{
-    max-width: 1100px;
+    max-width: 900px;
 }
 #chartContainer{
     padding: 0 10px;
     float: right;
-    max-width: 650px;
-}
-nav ul li {
-    display: inline;
+    max-width: 500px;
 }
