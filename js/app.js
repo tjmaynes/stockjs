@@ -1,37 +1,38 @@
 'use strict';
 
 $(function() {
+    function collectData(symbol, startDate, endDate) {
+	var url = "http://query.yahooapis.com/v1/public/yql";
+	var data = encodeURIComponent("select * from yahoo.finance.historicaldata where symbol in ('"
+				      + symbol + "') and startDate = \""
+				      + startDate + "\" and endDate = \""
+				      + endDate + "\"");
+	$.getJSON(url, "q=" + data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env")
+	    .done(function (data) {
+		console.log("url: " + this.url + "q=" + this.data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env");
+
+		// create model (data.query.results gives use the data we want for stockData)
+		var newModel = new CandleModel({ symbol: symbol, startDate: startDate, endDate: endDate, stockData: data.query.results.quote });
+		// create collection (store data to LocalStorage)
+		candleCollection.create(newModel);
+
+		// create default view object
+		var newView = new CandleView({ el: $("#candleView"), model: newModel });
+		newView.render();
+	    })
+	    .fail(function (jqxhr, textStatus, error) {
+		var err = textStatus + ", " + error;
+		console.log('Request failed: ' + err);
+	    });
+	return;
+    };
+
     var CandleModel = Backbone.Model.extend({
-	url: "http://query.yahooapis.com/v1/public/yql",
 	defaults: {
-	    symbol: "AAPL",
-	    startDate: "2014-01-01",
-	    endDate: "2015-01-01",
+	    symbol: "",
+	    startDate: "",
+	    endDate: "",
 	    stockData: []
-	},
-	initialize: function() {
-            _.bindAll(this, "getData");
-            this.getData();
-	},
-	getData: function() {
-	    console.log(this.get("symbol"));
-	    var self = this;
-	    var data = encodeURIComponent("select * from yahoo.finance.historicaldata where symbol in ('"
-					  + this.get("symbol") + "') and startDate = \""
-					  + this.get("startDate") + "\" and endDate = \""
-					  + this.get("endDate") + "\"");
-	    $.getJSON(this.url, "q=" + data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env")
-		.done(function (data) {
-		    console.log("url: " + this.url + "q=" + this.data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env");
-		    self.set({ stockData: data.query.results.quote });
-		})
-		.fail(function (jqxhr, textStatus, error) {
-		    var err = textStatus + ", " + error;
-		    console.log('Request failed: ' + err);
-		});
-	},
-	destroy: function() {
-	    this.model.destroy();
 	}
     });
 
@@ -43,6 +44,7 @@ $(function() {
     var candleCollection = new CandleCollection();
 
     var CandleView = Backbone.View.extend({
+	el: '#candleView',
 	constructor: function(options) {
 	    this.default_options = {
 		margin: {
@@ -55,16 +57,12 @@ $(function() {
 	    this.options = $.extend(true, this.default_options, options);
 	    Backbone.View.apply(this, arguments);
 	},
-	initialize: function(options) {
-	    _.bindAll(this, "render");
-	    candleCollection.bind('change', this.render);
-	},
 	render: function(options) {
-	    console.log(JSON.stringify(candleCollection));
+	    var data = JSON.parse(JSON.stringify(this.model.toJSON())).stockData;
+	    console.log(data[0]);
             var margin = this.options.margin;
             this.width = this.$el.width() - margin.left - margin.right;
             this.height = this.$el.height() - margin.top - margin.bottom;
-            var data =  candleCollection.toJSON(); //JSON.stringify(candleCollection);
             var chart = d3.select("#candlestick")
 		.append("svg:svg")
 		.attr("class", "chart")
@@ -175,29 +173,51 @@ $(function() {
 		}
 	    });
 
-	    // create model and collection
-	    candleCollection.create(new CandleModel());
+	    // default fields
+	    var startField = "2014-01-01";
+	    var endField = "2015-01-01";
+	    var symbolField =  "AAPL";
 
-	    // create new view objects
-	    new CandleView({ el: $("#candleView") });
+	    // collect data
+	    collectData(symbolField, startField, endField);
 	},
 	build: function() {
+	    // read form data
 	    var startField = this.$( "#startDatePicker" ).val();
 	    var endField = this.$( "#endDatePicker" ).val();
 	    var symbolField =  this.$( "#symbolField" ).val();
 
+	    // form entry validator
 	    if (symbolField != "" && startField != "" && endField != "") {
-		candleCollection.create(new CandleModel({ symbol: symbolField, startDate: startField, endDate: endField }));
-		new CandleView({ el: $("#candleView") });
+		// collect data
+		collectData(symbolField, startField, endField);
 	    } else {
 		$("#symbolField").removeAttr('placeholder');
 		$("#symbolField").attr('placeholder','Please enter a valid ticker symbol!');
 	    }
 	},
 	reset: function() {
+	    // clear form
 	    $("#myForm")[0].reset();
+
+	    // clear candlestick charts
 	    d3.select("svg").remove();
+
+	    // clear local storage
 	    localStorage.clear();
+
+	    // check console type
+	    if (typeof console._commandLineAPI !== 'undefined') {
+		console.API = console._commandLineAPI;
+	    } else if (typeof console._inspectorCommandLineAPI !== 'undefined') {
+		console.API = console._inspectorCommandLineAPI;
+	    } else if (typeof console.clear !== 'undefined') {
+		console.API = console;
+	    }
+
+	    // clear console
+	    console.API.clear();
+
 	    return;
 	}
     });
