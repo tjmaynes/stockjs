@@ -1,6 +1,6 @@
 'use strict';
 
-$(function(){
+$(function() {
     var CandleModel = Backbone.Model.extend({
 	url: "http://query.yahooapis.com/v1/public/yql",
 	defaults: {
@@ -187,8 +187,7 @@ $(function(){
 	    var symbolField =  this.$( "#symbolField" ).val();
 
 	    if (symbolField != "" && startField != "" && endField != "") {
-		var buildNewModel = new CandleModel({ symbol: symbolField, startDate: startField, endDate: endField });
-		candleCollection.create(buildNewModel);
+		candleCollection.create(new CandleModel({ symbol: symbolField, startDate: startField, endDate: endField }));
 		new CandleView({ el: $("#candleView") });
 	    } else {
 		$("#symbolField").removeAttr('placeholder');
