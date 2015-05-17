@@ -57,12 +57,11 @@ text {
     stroke: #000;
     shape-rendering: crispEdges;
 }
-.app{
+.wrapper{
     max-width: 900px;
 }
 #chartContainer{
     padding: 0 10px;
     float: right;
-    max-width: 500px;
-    height: 300px;
+    max-width: 520px;
 }

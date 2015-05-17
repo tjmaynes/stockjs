@@ -1,6 +1,9 @@
 'use strict';
 
 $(function() {
+    /*
+      Helper functions
+     */
     function collectData(symbol, startDate, endDate) {
 	var stock_data = null;
 	var url = "http://query.yahooapis.com/v1/public/yql";
@@ -12,11 +15,15 @@ $(function() {
 	    .done(function (data) {
 		console.log(this.url + "q=" + this.data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env");
 
+		// we want data.query.results.quote (everything else is not needed)
 		stock_data = data.query.results.quote;
-		// add timestamp
+
+		// add timestamp to stock_data object
 		for(var i=0; i<stock_data.length; i++){
 		    stock_data[i].timestamp = (new Date(stock_data[i].Date).getTime() / 10000);
 		}
+
+		// sort stock_data
 		stock_data = stock_data.sort(function(x,y) { return d3.time.format("%Y-%m-%d").parse(x.Date).getTime() - d3.time.format("%Y-%m-%d").parse(y.Date).getTime(); });
 
 		// create model (data.query.results gives use the data we want for stockData)
@@ -33,11 +40,13 @@ $(function() {
 		var err = textStatus + ", " + error;
 		console.log('Request failed: ' + err);
 	    });
-	return;
     };
     function min(a, b){ return a < b ? a : b; }
     function max(a, b){ return a > b ? a : b; }
 
+    /*
+       Model
+    */
     var CandleModel = Backbone.Model.extend({
 	defaults: {
 	    symbol: "",
@@ -47,26 +56,35 @@ $(function() {
 	}
     });
 
+    /*
+      Collection
+    */
     var CandleCollection = Backbone.Collection.extend({
 	model: CandleModel,
 	localStorage: new Store("stock_data")
     });
 
+    /*
+      View: CandleView
+    */
     var CandleView = Backbone.View.extend({
 	el: '#candleView',
 	render: function(options) {
+	    // helper variables
+	    var unique_chart = this.model.get("symbol") + "_" + this.model.get("startDate") + "_" + this.model.get("endDate");
+	    var format = d3.format();
+
 	    // get stock data from current model
 	    var data = this.model.get("stockData");
 
-	    console.dir(data);
-
-            var margin = 30;
-	    var width = this.$el.width();
-	    var height = this.$el.height();
+	    // default margin, width, height values
+            var margin = 40;
+	    var width = 500;
+	    var height = 300;
 
             var chart = d3.select(this.el)
-		.append("svg")
-		.attr("class", this.el)
+		.append("svg:svg")
+		.attr("class", unique_chart)
 		.attr("width", width)
 		.attr("height", height);
 	    var y = d3.scale.linear()
@@ -102,7 +120,7 @@ $(function() {
 		.attr("y", height - margin)
 		.attr("dy", 20)
 		.attr("text-anchor", "middle")
-		.text(function(d){ var date = new Date(d * 1000);  return (date.getMonth() + 1) + "/" + date.getDate(); });
+		.text(function(d) { var date = new Date(d * 1000);  return (date.getMonth() + 1) + "/" + date.getDate(); });
             chart.selectAll("text.yrule")
 		.data(y.ticks(10))
 		.enter().append("svg:text")
@@ -112,7 +130,7 @@ $(function() {
 		.attr("dy", 0)
 		.attr("dx", 20)
 		.attr("text-anchor", "middle")
-		.text(String);
+		.text(function(d) { return "$" + format(d); });
 	    chart.selectAll("rect")
 		.data(data)
 		.enter().append("svg:rect")
@@ -126,7 +144,6 @@ $(function() {
 		})
 		.attr("width", function(d) { return 0.5 * (width - 2 * margin)/data.length; })
 		.attr("fill", function(d) { return d.Open > d.Close ? "red" : "green"; });
-
 	    chart.selectAll("line.stem")
 		.data(data)
 		.enter().append("svg:line")
@@ -141,8 +158,11 @@ $(function() {
 	}
     });
 
-    var ChartView = Backbone.View.extend({
-	el: '.app',
+    /*
+      View: AppView
+    */
+    var AppView = Backbone.View.extend({
+	el: '#app',
 	events: {
 	    "click .buildBtn":  "build",
 	    "click .resetBtn":  "reset"
@@ -176,8 +196,8 @@ $(function() {
 	    });
 
 	    // default fields
-	    var startField = "2014-01-01";
-	    var endField = "2015-01-01";
+	    var startField = "2015-01-01";
+	    var endField = "2015-03-17";
 	    var symbolField =  "AAPL";
 
 	    // collect data
@@ -193,9 +213,15 @@ $(function() {
 	    if (symbolField != "" && startField != "" && endField != "") {
 		// collect data
 		collectData(symbolField, startField, endField);
-	    } else {
+	    } else if (symbolField === "") {
 		$("#symbolField").removeAttr('placeholder');
 		$("#symbolField").attr('placeholder','Please enter a valid ticker symbol!');
+	    } else if (startField === "") {
+		$("#startDatePicker").removeAttr('placeholder');
+		$("#startDatePicker").attr('placeholder','Please enter a valid start date!');
+	    } else if (endField === "") {
+		$("#endDatePicker").removeAttr('placeholder');
+		$("#endDatePicker").attr('placeholder','Please enter a valid end date!');
 	    }
 	},
 	reset: function() {
@@ -225,5 +251,5 @@ $(function() {
     });
 
     var candleCollection = new CandleCollection();
-    var app = new ChartView({ el: $("#chartContainer") });
+    var app = new AppView({ el: $("#app") });
 });
