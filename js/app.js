@@ -2,7 +2,7 @@
 
 $(function() {
     /*
-      Helper functions
+      Helper functions and variables
      */
     function collectData(symbol, startDate, endDate) {
 	var stock_data = null;
@@ -19,7 +19,7 @@ $(function() {
 		stock_data = data.query.results.quote;
 
 		// add timestamp to stock_data object
-		for(var i=0; i<stock_data.length; i++){
+		for(var i = 0; i < stock_data.length; i++){
 		    stock_data[i].timestamp = (new Date(stock_data[i].Date).getTime() / 10000);
 		}
 
@@ -43,9 +43,10 @@ $(function() {
     };
     function min(a, b){ return a < b ? a : b; }
     function max(a, b){ return a > b ? a : b; }
+    var chartNameArray = new Array();
 
     /*
-       Model
+       Model: CandleModel
     */
     var CandleModel = Backbone.Model.extend({
 	defaults: {
@@ -57,7 +58,7 @@ $(function() {
     });
 
     /*
-      Collection
+      Collection of Stocks Queried
     */
     var CandleCollection = Backbone.Collection.extend({
 	model: CandleModel,
@@ -71,7 +72,8 @@ $(function() {
 	el: '#candleView',
 	render: function(options) {
 	    // helper variables
-	    var unique_chart = this.model.get("symbol") + "_" + this.model.get("startDate") + "_" + this.model.get("endDate");
+	    var uniqueChartName = this.model.get("symbol") + "_" + this.model.get("startDate") + "_" + this.model.get("endDate");
+	    chartNameArray.push("." + uniqueChartName);
 	    var format = d3.format();
 
 	    // get stock data from current model
@@ -79,12 +81,12 @@ $(function() {
 
 	    // default margin, width, height values
             var margin = 40;
-	    var width = 500;
+	    var width = 550;
 	    var height = 300;
 
             var chart = d3.select(this.el)
 		.append("svg:svg")
-		.attr("class", unique_chart)
+		.attr("class", uniqueChartName)
 		.attr("width", width)
 		.attr("height", height);
 	    var y = d3.scale.linear()
@@ -228,9 +230,6 @@ $(function() {
 	    // clear form
 	    $("#myForm")[0].reset();
 
-	    // clear candlestick charts
-	    d3.select("svg").remove();
-
 	    // clear local storage
 	    localStorage.clear();
 
@@ -245,6 +244,15 @@ $(function() {
 
 	    // clear console
 	    console.API.clear();
+
+	    // clear candlestick charts
+	    for (var i = 0; i < chartNameArray.length; i++) {
+		d3.select(chartNameArray[i]).remove();
+		console.log("removed chart: " + chartNameArray[i]);
+	    }
+
+	    // thank you message
+	    console.log("Thanks for using this application!\n-tjmaynes :-)");
 
 	    return;
 	}

@@ -37,6 +37,7 @@ header{
 footer{
     float:left;
     max-width: 1100px;
+    bottom:0px;
 }
 h1, h2, h3, h4, h5, h6 {
     color:#444;
@@ -58,10 +59,14 @@ text {
     shape-rendering: crispEdges;
 }
 .wrapper{
-    max-width: 900px;
+    max-width: 980px;
 }
 #chartContainer{
     padding: 0 10px;
     float: right;
     max-width: 520px;
+}
+#app{
+    max-width: 560px;
+    float: right;
 }
