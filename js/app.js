@@ -2,6 +2,7 @@
 
 $(function() {
     function collectData(symbol, startDate, endDate) {
+	var stock_data = null;
 	var url = "http://query.yahooapis.com/v1/public/yql";
 	var data = encodeURIComponent("select * from yahoo.finance.historicaldata where symbol in ('"
 				      + symbol + "') and startDate = \""
@@ -9,10 +10,18 @@ $(function() {
 				      + endDate + "\"");
 	$.getJSON(url, "q=" + data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env")
 	    .done(function (data) {
-		console.log("url: " + this.url + "q=" + this.data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env");
+		console.log(this.url + "q=" + this.data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env");
+
+		stock_data = data.query.results.quote;
+		// add timestamp
+		for(var i=0; i<stock_data.length; i++){
+		    stock_data[i].timestamp = (new Date(stock_data[i].Date).getTime() / 10000);
+		}
+		stock_data = stock_data.sort(function(x,y) { return d3.time.format("%Y-%m-%d").parse(x.Date).getTime() - d3.time.format("%Y-%m-%d").parse(y.Date).getTime(); });
 
 		// create model (data.query.results gives use the data we want for stockData)
-		var newModel = new CandleModel({ symbol: symbol, startDate: startDate, endDate: endDate, stockData: data.query.results.quote });
+		var newModel = new CandleModel({ symbol: symbol, startDate: startDate, endDate: endDate, stockData: stock_data });
+
 		// create collection (store data to LocalStorage)
 		candleCollection.create(newModel);
 
@@ -26,6 +35,8 @@ $(function() {
 	    });
 	return;
     };
+    function min(a, b){ return a < b ? a : b; }
+    function max(a, b){ return a > b ? a : b; }
 
     var CandleModel = Backbone.Model.extend({
 	defaults: {
@@ -41,40 +52,29 @@ $(function() {
 	localStorage: new Store("stock_data")
     });
 
-    var candleCollection = new CandleCollection();
-
     var CandleView = Backbone.View.extend({
 	el: '#candleView',
-	constructor: function(options) {
-	    this.default_options = {
-		margin: {
-		    top: 20,
-		    right: 20,
-		    bottom: 30,
-		    left: 40
-		}
-	    };
-	    this.options = $.extend(true, this.default_options, options);
-	    Backbone.View.apply(this, arguments);
-	},
 	render: function(options) {
-	    var data = JSON.parse(JSON.stringify(this.model.toJSON())).stockData;
-	    console.log(data[0]);
-            var margin = this.options.margin;
-            this.width = this.$el.width() - margin.left - margin.right;
-            this.height = this.$el.height() - margin.top - margin.bottom;
-            var chart = d3.select("#candlestick")
-		.append("svg:svg")
-		.attr("class", "chart")
-		.attr("width", this.width)
-		.attr("height", this.height);
-            var y = d3.scale.linear()
-		.domain([d3.min(data.map(function(x) {return x["Low"];})), d3.max(data.map(function(x){return x["High"];}))])
-		.range([this.height-margin, margin]);
-            var x = d3.scale.linear()
-		.domain([d3.min(data.map(function(d){return dateFormat.parse(d.Date).getTime();})),
-			 d3.max(data.map(function(d){return dateFormat.parse(d.Date).getTime();}))])
-		.range([margin,this.width-margin]);
+	    // get stock data from current model
+	    var data = this.model.get("stockData");
+
+	    console.dir(data);
+
+            var margin = 30;
+	    var width = this.$el.width();
+	    var height = this.$el.height();
+
+            var chart = d3.select(this.el)
+		.append("svg")
+		.attr("class", this.el)
+		.attr("width", width)
+		.attr("height", height);
+	    var y = d3.scale.linear()
+		.domain([d3.min(data.map(function(x) {return x["Low"];})), d3.max(data.map(function(x) {return x["High"];}))])
+		.range([height - margin, margin]);
+	    var x = d3.scale.linear()
+		.domain([d3.min(data.map(function(x) {return x.timestamp;})), d3.max(data.map(function(x) { return x.timestamp;}))])
+		.range([margin, width - margin]);
 
             chart.selectAll("line.x")
 		.data(x.ticks(10))
@@ -83,59 +83,61 @@ $(function() {
 		.attr("x1", x)
 		.attr("x2", x)
 		.attr("y1", margin)
-		.attr("y2", this.height - margin)
+		.attr("y2", height - margin)
 		.attr("stroke", "#ccc");
-
             chart.selectAll("line.y")
 		.data(y.ticks(10))
 		.enter().append("svg:line")
 		.attr("class", "y")
 		.attr("x1", margin)
-		.attr("x2", this.width - margin)
+		.attr("x2", width - margin)
 		.attr("y1", y)
 		.attr("y2", y)
 		.attr("stroke", "#ccc");
-
             chart.selectAll("text.xrule")
 		.data(x.ticks(10))
 		.enter().append("svg:text")
 		.attr("class", "xrule")
 		.attr("x", x)
-		.attr("y", this.height - margin)
+		.attr("y", height - margin)
 		.attr("dy", 20)
 		.attr("text-anchor", "middle")
-		.text(function(d){ var date = new Date(d * 1000);  return (date.getMonth() + 1)+"/"+date.getDate(); });
-
+		.text(function(d){ var date = new Date(d * 1000);  return (date.getMonth() + 1) + "/" + date.getDate(); });
             chart.selectAll("text.yrule")
 		.data(y.ticks(10))
 		.enter().append("svg:text")
 		.attr("class", "yrule")
-		.attr("x", this.width - margin)
+		.attr("x", width - margin)
 		.attr("y", y)
 		.attr("dy", 0)
 		.attr("dx", 20)
 		.attr("text-anchor", "middle")
 		.text(String);
-
-            chart.selectAll("rect")
+	    chart.selectAll("rect")
 		.data(data)
 		.enter().append("svg:rect")
-		.attr("x", function(d) { return x(dateFormat.parse(d.Date).getTime()); })
-		.attr("y", function(d) {return y(max(d.Open, d.Close));})
-		.attr("this.height", function(d) { return y(min(d.Open, d.Close))-y(max(d.Open, d.Close));})
-		.attr("this.width", function(d) { return 0.5 * (this.width - 2*margin)/data.length; })
-		.attr("fill",function(d) { return d.Open > d.Close ? "red" : "green" ;});
+		.attr("x", function(d) { return x(d.timestamp); })
+		.attr("y", function(d) { return y(max(d.Open, d.Close)); })
+		.attr("height", function(d) {
+		    var temp = y(min(d.Open, d.Close)) - y(max(d.Open, d.Close));
+		    if (temp < 0){
+			temp = y(max(d.Open, d.Close)) - y(min(d.Open, d.Close));
+		    } return temp;
+		})
+		.attr("width", function(d) { return 0.5 * (width - 2 * margin)/data.length; })
+		.attr("fill", function(d) { return d.Open > d.Close ? "red" : "green"; });
 
-            chart.selectAll("line.stem")
+	    chart.selectAll("line.stem")
 		.data(data)
 		.enter().append("svg:line")
 		.attr("class", "stem")
-		.attr("x1", function(d) { return x(dateFormat.parse(d.Date).getTime()) + 0.25 * (this.width - 2 * margin)/ data.length;})
-		.attr("x2", function(d) { return x(dateFormat.parse(d.Date).getTime()) + 0.25 * (this.width - 2 * margin)/ data.length;})
-		.attr("y1", function(d) { return y(d.High);})
+		.attr("x1", function(d) { return x(d.timestamp) + 0.25 * (width - 2 * margin)/data.length; })
+		.attr("x2", function(d) { return x(d.timestamp) + 0.25 * (width - 2 * margin)/data.length; })
+		.attr("y1", function(d) { return y(d.High); })
 		.attr("y2", function(d) { return y(d.Low); })
-		.attr("stroke", function(d){ return d.Open > d.Close ? "red" : "green"; })
-            return this;
+		.attr("stroke", function(d) { return d.Open > d.Close ? "red" : "green"; })
+
+            return;
 	}
     });
 
@@ -221,5 +223,7 @@ $(function() {
 	    return;
 	}
     });
+
+    var candleCollection = new CandleCollection();
     var app = new ChartView({ el: $("#chartContainer") });
 });
