@@ -2,8 +2,7 @@
 an interactive candlestick chart using D3js, Backbonejs, and Yahoo Query Language.
 
 To run, enter in terminal:
-* npm install
-* npm start
+* ruby -run -e httpd -- -p 8080 .
 
 Go to browser and enter:
 * localhost:8080
