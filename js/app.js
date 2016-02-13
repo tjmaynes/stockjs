@@ -2,51 +2,55 @@
 
 $(function() {
     /*
-      Helper functions and variables
-     */
+      Collect Data
+    */
     function collectData(symbol, startDate, endDate) {
-	var stock_data = null;
-	var url = "http://query.yahooapis.com/v1/public/yql";
+	var url = "https://query.yahooapis.com/v1/public/yql";
 	var data = encodeURIComponent("select * from yahoo.finance.historicaldata where symbol in ('"
 				      + symbol + "') and startDate = \""
 				      + startDate + "\" and endDate = \""
 				      + endDate + "\"");
-	$.getJSON(url, "q=" + data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env")
-	    .done(function (data) {
-		console.log(this.url + "q=" + this.data + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env");
+        data += "&format=json&diagnostics=true&env=http://datatables.org/alltables.env";
+	$.getJSON(url, "q=" + data)
+	    .done(function(data) {
+		var stockData = data.query.results.quote;
 
-		// we want data.query.results.quote (everything else is not needed)
-		stock_data = data.query.results.quote;
+		// add timestamp to stockData object
+		for(var i = 0; i < stockData.length; i++)
+		    stockData[i].timestamp = (new Date(stockData[i].Date).getTime() / 10000);
 
-		// add timestamp to stock_data object
-		for(var i = 0; i < stock_data.length; i++){
-		    stock_data[i].timestamp = (new Date(stock_data[i].Date).getTime() / 10000);
-		}
-
-		// sort stock_data
-		stock_data = stock_data.sort(function(x,y) { return d3.time.format("%Y-%m-%d").parse(x.Date).getTime() - d3.time.format("%Y-%m-%d").parse(y.Date).getTime(); });
+		var sortedStockData = stockData.sort(function(x,y){ 
+                    return d3.time.format("%Y-%m-%d").parse(x.Date).getTime() - d3.time.format("%Y-%m-%d").parse(y.Date).getTime();
+                });
 
 		// create model (data.query.results gives use the data we want for stockData)
-		var newModel = new CandleModel({ symbol: symbol, startDate: startDate, endDate: endDate, stockData: stock_data });
+		var newModel = new CandleModel({ 
+                    symbol: symbol,                       
+                    startDate: startDate,
+                    endDate: endDate,
+                    stockData: stockData
+                });
 
-		// create collection (store data to LocalStorage)
+		// create collection
 		candleCollection.create(newModel);
 
 		// create default view object
-		var newView = new CandleView({ el: $("#candleView"), model: newModel });
-		newView.render();
+		var newCandleStickView = new CandleView({ el: $("#candleView"), model: newModel });
+		newCandleStickView.render();
 	    })
 	    .fail(function (jqxhr, textStatus, error) {
 		var err = textStatus + ", " + error;
 		console.log('Request failed: ' + err);
 	    });
     };
+
+    // helper functions
     function min(a, b){ return a < b ? a : b; }
     function max(a, b){ return a > b ? a : b; }
     var chartNameArray = new Array();
 
     /*
-       Model: CandleModel
+      Model: CandleModel
     */
     var CandleModel = Backbone.Model.extend({
 	defaults: {
@@ -62,7 +66,7 @@ $(function() {
     */
     var CandleCollection = Backbone.Collection.extend({
 	model: CandleModel,
-	localStorage: new Store("stock_data")
+	localStorage: new Store("stock")
     });
 
     /*
@@ -170,11 +174,9 @@ $(function() {
 	    "click .resetBtn":  "reset"
 	},
 	initialize: function() {
-	    // Compile the template using underscore
 	    var template = _.template( $("#chartTemplate").html());
 	    this.$el.html( template );
 
-	    // set up datepicker (for ui coolness)
 	    $("#startDatePicker").datepicker({
 		autoclose: true,
 		changeMonth: true,
@@ -186,6 +188,7 @@ $(function() {
 		    $( "#endDatePicker" ).datepicker( "option", "maxDate", new Date());
 		}
 	    });
+
 	    $('#endDatePicker').datepicker({
 		autoclose: true,
 		changeMonth: true,
@@ -202,18 +205,15 @@ $(function() {
 	    var endField = "2015-03-17";
 	    var symbolField =  "AAPL";
 
-	    // collect data
 	    collectData(symbolField, startField, endField);
 	},
 	build: function() {
-	    // read form data
 	    var startField = this.$( "#startDatePicker" ).val();
 	    var endField = this.$( "#endDatePicker" ).val();
 	    var symbolField =  this.$( "#symbolField" ).val();
 
 	    // form entry validator
 	    if (symbolField != "" && startField != "" && endField != "") {
-		// collect data
 		collectData(symbolField, startField, endField);
 	    } else if (symbolField === "") {
 		$("#symbolField").removeAttr('placeholder');
@@ -227,13 +227,10 @@ $(function() {
 	    }
 	},
 	reset: function() {
-	    // clear form
 	    $("#myForm")[0].reset();
 
-	    // clear local storage
 	    localStorage.clear();
 
-	    // check console type
 	    if (typeof console._commandLineAPI !== 'undefined') {
 		console.API = console._commandLineAPI;
 	    } else if (typeof console._inspectorCommandLineAPI !== 'undefined') {
@@ -242,17 +239,10 @@ $(function() {
 		console.API = console;
 	    }
 
-	    // clear console
 	    console.API.clear();
 
-	    // clear candlestick charts
-	    for (var i = 0; i < chartNameArray.length; i++) {
+	    for (var i = 0; i < chartNameArray.length; i++)
 		d3.select(chartNameArray[i]).remove();
-		console.log("removed chart: " + chartNameArray[i]);
-	    }
-
-	    // thank you message
-	    console.log("Thanks for using this application!\n-tjmaynes :-)");
 
 	    return;
 	}
