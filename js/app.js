@@ -3,10 +3,14 @@
 $(function() {
   const chartWidth = $(document).width() - 100;
   const chartHeight = 430;
+  const chartMargin = 40;
 
-  var chartNameArray = new Array();
-  var candleCollection = new CandleCollection();
-  var app = new AppView();
+  function min(a, b){ return a < b ? a : b; }
+  function max(a, b){ return a > b ? a : b; }
+
+  function getDate(d) {
+      return new Date(d.Date);
+  }
 
   /*
   * Model: CandleModel
@@ -41,12 +45,14 @@ $(function() {
       var data = this.model.get("stockData");
 
       var chartName = symbol + "-" + startDate + "-" + endDate;
-      chartNameArray.push("." + chartName);
+      chartData.push("." + chartName);
 
       $( "#candleChart" ).width(chartWidth);
 
       buildChartView({ element: this.el, chartName: chartName, data: data });
-      $( "#candleChart" ).append( "<p id=\"candleChartInfo\">" + info + "</p>" );
+
+      $( "#candleChart" ).append( "<p id=\"candleChartInfo\" class=" + chartName + ">" + info + "</p>" );
+      chartData.push("." + chartName);
 
       return self;
     }
@@ -57,9 +63,9 @@ $(function() {
     var chartName = options.chartName;
     var data = options.data;
 
-    var margin = 40;
     var width = chartWidth;
     var height = chartHeight;
+    var margin = chartMargin;
 
     var chart = d3.select(element)
     .append("svg:svg")
@@ -227,11 +233,9 @@ $(function() {
 
       console.API.clear();
 
-      for (var i = 0; i < chartNameArray.length; i++) {
-        d3.select(chartNameArray[i]).remove();
+      for (var i = 0; i < chartData.length; i++) {
+        d3.select(chartData[i]).remove();
       }
-
-      $("#candleChartInfo").text("");
 
       return;
     }
@@ -273,10 +277,7 @@ $(function() {
     });
   };
 
-  function min(a, b){ return a < b ? a : b; }
-  function max(a, b){ return a > b ? a : b; }
-
-  function getDate(d) {
-      return new Date(d.Date);
-  }
+  var chartData = new Array();
+  var candleCollection = new CandleCollection();
+  var app = new AppView();
 });
