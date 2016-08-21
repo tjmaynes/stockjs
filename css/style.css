@@ -28,12 +28,6 @@ body {
     font-weight:300;
     background:#fbfbfb;
 }
-header{
-    background: yellow;
-    max-width: 350px;
-    padding:0 5px;
-    float: left;
-}
 footer{
     float:left;
     max-width: 1100px;
@@ -61,12 +55,10 @@ text {
 .wrapper{
     max-width: 980px;
 }
-#chartContainer{
-    padding: 0 10px;
-    float: right;
-    max-width: 520px;
+#candleChart {
+  margin-top: 10px;
 }
-#app{
-    max-width: 560px;
-    float: right;
+
+#candleChartInfo {
+  text-align:center;
 }

@@ -1,9 +1,12 @@
 'use strict';
 
 $(function() {
+  const chartWidth = $(document).width() - 100;
+  const chartHeight = 430;
+
   /*
-   * Model: CandleModel
-   */
+  * Model: CandleModel
+  */
   var CandleModel = Backbone.Model.extend({
     defaults: {
       symbol: "",
@@ -14,111 +17,131 @@ $(function() {
   });
 
   /*
-   * Collection of Stocks Queried
-   */
+  * Collection of Stocks Queried
+  */
   var CandleCollection = Backbone.Collection.extend({
     model: CandleModel,
     localStorage: new Store("stock")
   });
 
   /*
-   * View: CandleView
-   */
-  var CandleView = Backbone.View.extend({
-    el: '#candleView',
-    render: function(options) {
-      // helper variables
-      var uniqueChartName = this.model.get("symbol") + "_" + this.model.get("startDate") + "_" + this.model.get("endDate");
-      chartNameArray.push("." + uniqueChartName);
-      var format = d3.format();
-
-      // get stock data from current model
+  * View: CandleChart
+  */
+  var CandleChart = Backbone.View.extend({
+    el: '#candleChart',
+    initialize: function(options) {
+      var symbol = this.model.get("symbol");
+      var startDate = this.model.get("startDate");
+      var endDate = this.model.get("endDate");
+      var info = symbol + " between " + startDate + " and " + endDate;
       var data = this.model.get("stockData");
 
-      // default margin, width, height values
-      var margin = 40;
-      var width = 550;
-      var height = 300;
+      var chartName = symbol + "-" + startDate + "-" + endDate;
+      chartNameArray.push("." + chartName);
 
-      var chart = d3.select(this.el)
-      .append("svg:svg")
-      .attr("class", uniqueChartName)
-      .attr("width", width)
-      .attr("height", height);
-      var y = d3.scale.linear()
-      .domain([d3.min(data.map(function(x) {return x["Low"];})), d3.max(data.map(function(x) {return x["High"];}))])
-      .range([height - margin, margin]);
-      var x = d3.scale.linear()
-      .domain([d3.min(data.map(function(x) {return x.timestamp;})), d3.max(data.map(function(x) { return x.timestamp;}))])
-      .range([margin, width - margin]);
+      $( "#candleChart" ).width(chartWidth);
 
-      chart.selectAll("line.x")
-      .data(x.ticks(10))
-      .enter().append("svg:line")
-      .attr("class", "x")
-      .attr("x1", x)
-      .attr("x2", x)
-      .attr("y1", margin)
-      .attr("y2", height - margin)
-      .attr("stroke", "#ccc");
-      chart.selectAll("line.y")
-      .data(y.ticks(10))
-      .enter().append("svg:line")
-      .attr("class", "y")
-      .attr("x1", margin)
-      .attr("x2", width - margin)
-      .attr("y1", y)
-      .attr("y2", y)
-      .attr("stroke", "#ccc");
-      chart.selectAll("text.xrule")
-      .data(x.ticks(10))
-      .enter().append("svg:text")
-      .attr("class", "xrule")
-      .attr("x", x)
-      .attr("y", height - margin)
-      .attr("dy", 20)
-      .attr("text-anchor", "middle")
-      .text(function(d) { var date = new Date(d * 1000);  return (date.getMonth() + 1) + "/" + date.getDate(); });
-      chart.selectAll("text.yrule")
-      .data(y.ticks(10))
-      .enter().append("svg:text")
-      .attr("class", "yrule")
-      .attr("x", width - margin)
-      .attr("y", y)
-      .attr("dy", 0)
-      .attr("dx", 20)
-      .attr("text-anchor", "middle")
-      .text(function(d) { return "$" + format(d); });
-      chart.selectAll("rect")
-      .data(data)
-      .enter().append("svg:rect")
-      .attr("x", function(d) { return x(d.timestamp); })
-      .attr("y", function(d) { return y(max(d.Open, d.Close)); })
-      .attr("height", function(d) {
-        var temp = y(min(d.Open, d.Close)) - y(max(d.Open, d.Close));
-        if (temp < 0){
-          temp = y(max(d.Open, d.Close)) - y(min(d.Open, d.Close));
-        } return temp;
-      })
-      .attr("width", function(d) { return 0.5 * (width - 2 * margin)/data.length; })
-      .attr("fill", function(d) { return d.Open > d.Close ? "red" : "green"; });
-      chart.selectAll("line.stem")
-      .data(data)
-      .enter().append("svg:line")
-      .attr("class", "stem")
-      .attr("x1", function(d) { return x(d.timestamp) + 0.25 * (width - 2 * margin)/data.length; })
-      .attr("x2", function(d) { return x(d.timestamp) + 0.25 * (width - 2 * margin)/data.length; })
-      .attr("y1", function(d) { return y(d.High); })
-      .attr("y2", function(d) { return y(d.Low); })
-      .attr("stroke", function(d) { return d.Open > d.Close ? "red" : "green"; })
+      buildChartView({ element: this.el, chartName: chartName, data: data });
+      $( "#candleChart" ).append( "<p id=\"candleChartInfo\">" + info + "</p>" );
 
-      return;
+      return self;
     }
   });
 
+  function buildChartView(options) {
+    var element = options.element;
+    var chartName = options.chartName;
+    var data = options.data;
+
+    var margin = 40;
+    var width = chartWidth;
+    var height = chartHeight;
+
+    var chart = d3.select(element)
+    .append("svg:svg")
+    .attr("class", chartName)
+    .attr("width", width)
+    .attr("height", height);
+
+    var x = d3.scale.linear()
+    .domain([d3.min(data.map(function(x) {return x.timestamp;})), d3.max(data.map(function(x) { return x.timestamp;}))])
+    .range([margin, width - margin]);
+
+    var y = d3.scale.linear()
+    .domain([d3.min(data.map(function(x) {return x["Low"];})), d3.max(data.map(function(x) {return x["High"];}))])
+    .range([height - margin, margin]);
+
+    chart.selectAll("line.x")
+    .data(x.ticks(10))
+    .enter().append("svg:line")
+    .attr("class", "x")
+    .attr("x1", x)
+    .attr("x2", x)
+    .attr("y1", margin)
+    .attr("y2", height - margin)
+    .attr("stroke", "#ccc");
+
+    chart.selectAll("line.y")
+    .data(y.ticks(10))
+    .enter().append("svg:line")
+    .attr("class", "y")
+    .attr("x1", margin)
+    .attr("x2", width - margin)
+    .attr("y1", y)
+    .attr("y2", y)
+    .attr("stroke", "#ccc");
+
+    chart.selectAll("text.xrule")
+    .data(x.ticks(10))
+    .enter().append("svg:text")
+    .attr("class", "xrule")
+    .attr("x", x)
+    .attr("y", height - margin)
+    .attr("dy", 20)
+    .attr("text-anchor", "middle")
+    .text(function(d) { var date = new Date(d * 1000);  return (date.getMonth() + 1) + "/" + date.getDate(); });
+
+    var format = d3.format();
+
+    chart.selectAll("text.yrule")
+    .data(y.ticks(10))
+    .enter().append("svg:text")
+    .attr("class", "yrule")
+    .attr("x", width - margin)
+    .attr("y", y)
+    .attr("dy", 0)
+    .attr("dx", 20)
+    .attr("text-anchor", "middle")
+    .text(function(d) { return "$" + format(d); });
+
+    chart.selectAll("rect")
+    .data(data)
+    .enter().append("svg:rect")
+    .attr("x", function(d) { return x(d.timestamp); })
+    .attr("y", function(d) { return y(max(d.Open, d.Close)); })
+    .attr("height", function(d) {
+      var temp = y(min(d.Open, d.Close)) - y(max(d.Open, d.Close));
+      if (temp < 0){
+        temp = y(max(d.Open, d.Close)) - y(min(d.Open, d.Close));
+      } return temp;
+    })
+    .attr("width", function(d) { return 0.5 * (width - 2 * margin)/data.length; })
+    .attr("fill", function(d) { return d.Open > d.Close ? "red" : "green"; });
+
+    chart.selectAll("line.stem")
+    .data(data)
+    .enter().append("svg:line")
+    .attr("class", "stem")
+    .attr("x1", function(d) { return x(d.timestamp) + 0.25 * (width - 2 * margin)/data.length; })
+    .attr("x2", function(d) { return x(d.timestamp) + 0.25 * (width - 2 * margin)/data.length; })
+    .attr("y1", function(d) { return y(d.High); })
+    .attr("y2", function(d) { return y(d.Low); })
+    .attr("stroke", function(d) { return d.Open > d.Close ? "red" : "green"; })
+  }
+
   /*
-   * View: AppView
-   */
+  * View: AppView
+  */
   var AppView = Backbone.View.extend({
     el: '#app',
 
@@ -128,8 +151,8 @@ $(function() {
     },
 
     initialize: function() {
-      var template = _.template( $("#chartTemplate").html());
-      this.$el.html( template );
+      var chartTemplate = _.template( $("#chartTemplate").html());
+      this.$el.html( chartTemplate );
 
       $("#startDatePicker").datepicker({
         autoclose: true,
@@ -183,7 +206,7 @@ $(function() {
     },
 
     reset: function() {
-      $("#myForm")[0].reset();
+      $("#chartForm")[0].reset();
 
       localStorage.clear();
 
@@ -201,58 +224,55 @@ $(function() {
         d3.select(chartNameArray[i]).remove();
       }
 
+      $("#candleChartInfo").text("");
+
       return;
     }
   });
 
-  var candleCollection = new CandleCollection();
-  var app = new AppView({ el: $("#app") });
-
   /*
-   * Collect Data
-   */
+  * Collect Data
+  */
   function collectData(symbol, startDate, endDate) {
     var url = "https://query.yahooapis.com/v1/public/yql";
-    var query = encodeURIComponent("select * from yahoo.finance.historicaldata where symbol in ('" symbol + "') and startDate = \"" + startDate + "\" and endDate = \"" + endDate + "\"");
+    var yqlStatement = "select * from yahoo.finance.historicaldata where symbol in ('" + symbol + "') and startDate = \"" + startDate + "\" and endDate = \"" + endDate + "\"";
+    var query = encodeURIComponent(yqlStatement);
     var data  = query + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env";
 
     $.getJSON(url, "q=" + data).done(function(data) {
-
       var stockData = data.query.results.quote;
 
       // add timestamp to stockData object
       for(var i = 0; i < stockData.length; i++)
       stockData[i].timestamp = (new Date(stockData[i].Date).getTime() / 10000);
 
-      var sortedStockData = stockData.sort(function(x,y){ 
+      var sortedStockData = stockData.sort(function(x,y){
         return d3.time.format("%Y-%m-%d").parse(x.Date).getTime() - d3.time.format("%Y-%m-%d").parse(y.Date).getTime();
       });
 
       // create model (data.query.results gives use the data we want for stockData)
-      var newModel = new CandleModel({ 
-        symbol: symbol,                       
+      var model = new CandleModel({
+        symbol: symbol,
         startDate: startDate,
         endDate: endDate,
         stockData: stockData
       });
 
       // create collection
-      candleCollection.create(newModel);
+      candleCollection.create(model);
 
       // create default view object
-      var newCandleStickView = new CandleView({ el: $("#candleView"), model: newModel });
-      newCandleStickView.render();
-
+      var candleChart = new CandleChart({ model: model });
     }).fail(function (jqxhr, textStatus, error) {
-
       var err = textStatus + ", " + error;
       console.log('Request failed: ' + err);
-
     });
   };
 
-  // helper functions
   function min(a, b){ return a < b ? a : b; }
   function max(a, b){ return a > b ? a : b; }
+
   var chartNameArray = new Array();
+  var candleCollection = new CandleCollection();
+  var app = new AppView();
 });
