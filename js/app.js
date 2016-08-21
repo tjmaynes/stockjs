@@ -4,6 +4,10 @@ $(function() {
   const chartWidth = $(document).width() - 100;
   const chartHeight = 430;
 
+  var chartNameArray = new Array();
+  var candleCollection = new CandleCollection();
+  var app = new AppView();
+
   /*
   * Model: CandleModel
   */
@@ -63,8 +67,11 @@ $(function() {
     .attr("width", width)
     .attr("height", height);
 
-    var x = d3.scale.linear()
-    .domain([d3.min(data.map(function(x) {return x.timestamp;})), d3.max(data.map(function(x) { return x.timestamp;}))])
+    var minDate = getDate(data[0]),
+        maxDate = getDate(data[data.length - 1]);
+
+    var x = d3.time.scale()
+    .domain([minDate, maxDate])
     .range([margin, width - margin]);
 
     var y = d3.scale.linear()
@@ -99,7 +106,7 @@ $(function() {
     .attr("y", height - margin)
     .attr("dy", 20)
     .attr("text-anchor", "middle")
-    .text(function(d) { var date = new Date(d * 1000);  return (date.getMonth() + 1) + "/" + date.getDate(); });
+    .text(function(d) { return $.datepicker.formatDate('M dd yy', d); });
 
     var format = d3.format();
 
@@ -117,13 +124,14 @@ $(function() {
     chart.selectAll("rect")
     .data(data)
     .enter().append("svg:rect")
-    .attr("x", function(d) { return x(d.timestamp); })
+    .attr("x", function(d) { return x(getDate(d)); })
     .attr("y", function(d) { return y(max(d.Open, d.Close)); })
     .attr("height", function(d) {
       var temp = y(min(d.Open, d.Close)) - y(max(d.Open, d.Close));
-      if (temp < 0){
+      if (temp < 0) {
         temp = y(max(d.Open, d.Close)) - y(min(d.Open, d.Close));
-      } return temp;
+      }
+      return temp;
     })
     .attr("width", function(d) { return 0.5 * (width - 2 * margin)/data.length; })
     .attr("fill", function(d) { return d.Open > d.Close ? "red" : "green"; });
@@ -132,8 +140,8 @@ $(function() {
     .data(data)
     .enter().append("svg:line")
     .attr("class", "stem")
-    .attr("x1", function(d) { return x(d.timestamp) + 0.25 * (width - 2 * margin)/data.length; })
-    .attr("x2", function(d) { return x(d.timestamp) + 0.25 * (width - 2 * margin)/data.length; })
+    .attr("x1", function(d) { return x(getDate(d)) + 0.25 * (width - 2 * margin)/data.length; })
+    .attr("x2", function(d) { return x(getDate(d)) + 0.25 * (width - 2 * margin)/data.length; })
     .attr("y1", function(d) { return y(d.High); })
     .attr("y2", function(d) { return y(d.Low); })
     .attr("stroke", function(d) { return d.Open > d.Close ? "red" : "green"; })
@@ -177,7 +185,6 @@ $(function() {
         }
       });
 
-      // default fields
       var startField = "2015-01-01";
       var endField = "2015-03-17";
       var symbolField =  "AAPL";
@@ -236,21 +243,20 @@ $(function() {
   function collectData(symbol, startDate, endDate) {
     var url = "https://query.yahooapis.com/v1/public/yql";
     var yqlStatement = "select * from yahoo.finance.historicaldata where symbol in ('" + symbol + "') and startDate = \"" + startDate + "\" and endDate = \"" + endDate + "\"";
-    var query = encodeURIComponent(yqlStatement);
-    var data  = query + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env";
+    var queryComponent = encodeURIComponent(yqlStatement);
+    var query  = queryComponent + "&format=json&diagnostics=true&env=http://datatables.org/alltables.env";
 
-    $.getJSON(url, "q=" + data).done(function(data) {
+    $.getJSON(url, "q=" + query).done(function(data) {
       var stockData = data.query.results.quote;
 
-      // add timestamp to stockData object
-      for(var i = 0; i < stockData.length; i++)
-      stockData[i].timestamp = (new Date(stockData[i].Date).getTime() / 10000);
+      for (var i = 0; i < stockData.length; i++) {
+          stockData[i].timestamp = (new Date(stockData[i].Date).getTime() / 10000);
+      }
 
-      var sortedStockData = stockData.sort(function(x,y){
+      var sortedStockData = stockData.sort(function(x,y) {
         return d3.time.format("%Y-%m-%d").parse(x.Date).getTime() - d3.time.format("%Y-%m-%d").parse(y.Date).getTime();
       });
 
-      // create model (data.query.results gives use the data we want for stockData)
       var model = new CandleModel({
         symbol: symbol,
         startDate: startDate,
@@ -258,11 +264,9 @@ $(function() {
         stockData: stockData
       });
 
-      // create collection
       candleCollection.create(model);
-
-      // create default view object
       var candleChart = new CandleChart({ model: model });
+
     }).fail(function (jqxhr, textStatus, error) {
       var err = textStatus + ", " + error;
       console.log('Request failed: ' + err);
@@ -272,7 +276,7 @@ $(function() {
   function min(a, b){ return a < b ? a : b; }
   function max(a, b){ return a > b ? a : b; }
 
-  var chartNameArray = new Array();
-  var candleCollection = new CandleCollection();
-  var app = new AppView();
+  function getDate(d) {
+      return new Date(d.Date);
+  }
 });

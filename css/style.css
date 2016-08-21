@@ -33,9 +33,17 @@ footer{
     max-width: 1100px;
     bottom:0px;
 }
+header {
+      margin:0 0 20px;
+}
 h1, h2, h3, h4, h5, h6 {
     color:#444;
-    margin:0 0 20px;
+}
+h1 {
+  font-size: 24px;
+}
+h2 {
+  font-size: 16px;
 }
 ol, ul{
     margin:0 0 10px;
@@ -61,4 +69,5 @@ text {
 
 #candleChartInfo {
   text-align:center;
+  background: yellow;
 }
