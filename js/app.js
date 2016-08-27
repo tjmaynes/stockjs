@@ -1,9 +1,9 @@
 'use strict';
 
 $(function() {
-  const chartWidth = $(document).width() - 100;
-  const chartHeight = 430;
-  const chartMargin = 40;
+  var chartWidth = $(document).width() - 100;
+  var chartHeight = 430;
+  var chartMargin = 40;
 
   function min(a, b){ return a < b ? a : b; }
   function max(a, b){ return a > b ? a : b; }
